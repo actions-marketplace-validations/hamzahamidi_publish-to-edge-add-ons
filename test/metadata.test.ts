@@ -48,6 +48,13 @@ describe('action metadata', () => {
     }
   });
 
+  it('action.yml has a description the Marketplace accepts, at most 125 characters', () => {
+    const description = /^description: (.+)$/m.exec(readFileSync('action.yml', 'utf8'))?.[1]?.trim() ?? '';
+    assert.ok(description.length > 0, 'action.yml has no top-level description');
+    assert.ok(!description.includes(': '), 'a plain YAML scalar cannot hold a colon followed by a space');
+    assert.ok(description.length <= 125, `action.yml description is ${description.length} characters`);
+  });
+
   it('action.yml runs src/main.ts on Node 24', () => {
     const runs = parseKeys('action.yml').children.get('runs')!;
     assert.deepEqual([...runs.children.keys()].sort(), ['main', 'using']);

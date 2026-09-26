@@ -1,5 +1,5 @@
 name: Publish to Edge Add-ons
-description: Publish updates to a Microsoft Edge extension through the Edge Add-ons API. Uploads the ZIP to the draft, submits it for certification, and has no runtime dependencies.
+description: Publish Microsoft Edge extension updates through the Edge Add-ons API. Uploads the ZIP and submits it for certification.
 author: Hamza Hamidi
 
 branding:
