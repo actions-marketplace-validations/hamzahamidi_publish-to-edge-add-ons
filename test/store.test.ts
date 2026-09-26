@@ -491,8 +491,8 @@ describe('publishToEdge: the upload operation', () => {
   });
 
   it('gives up on a slow status check after the request timeout and counts it as transient', async () => {
-    uploadAnd({ ...uploadSucceeded(), delayMs: 1000 }, uploadSucceeded());
-    const run = publish({ submit: false, requestTimeoutMs: 50 });
+    uploadAnd({ ...uploadSucceeded(), delayMs: 2000 }, uploadSucceeded());
+    const run = publish({ submit: false, requestTimeoutMs: 500 });
     assert.equal((await run).result, 'uploaded');
     assert.match(run.lines.join('\n'), /Status check failed, trying again: GET .* failed: /);
   });
@@ -601,8 +601,8 @@ describe('publishToEdge: the publish request', () => {
 
   it('gives up on a slow publish call after the request timeout, once', async () => {
     uploadAnd(uploadSucceeded());
-    store.on(PUBLISH, { ...accepted(PUBLISH_OP), delayMs: 1000 });
-    const error = await rejection(publish({ requestTimeoutMs: 200 }));
+    store.on(PUBLISH, { ...accepted(PUBLISH_OP), delayMs: 2000 });
+    const error = await rejection(publish({ requestTimeoutMs: 500 }));
     assert.match(error.message, /^POST .*\/submissions failed: /);
     assert.match(error.details!, /Microsoft may have created the submission/);
     assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, PUBLISH]);

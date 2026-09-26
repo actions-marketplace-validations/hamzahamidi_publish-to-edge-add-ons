@@ -250,7 +250,7 @@ describe('re-run and crash matrix (design 6.7)', () => {
 
   const lostSubmissions: Array<[string, Fault['reply'], Partial<PublishOptions>]> = [
     ['a reset connection', { destroy: true }, {}],
-    ['the request timeout', { delayMs: 400, status: 202 }, { requestTimeoutMs: 100 }],
+    ['the request timeout', { delayMs: 2000, status: 202 }, { requestTimeoutMs: 500 }],
     ['HTTP 408', { status: 408, body: null }, {}],
     ['HTTP 500', { status: 500, body: null }, {}],
     ['a 202 without Location', { status: 202, body: null }, {}],

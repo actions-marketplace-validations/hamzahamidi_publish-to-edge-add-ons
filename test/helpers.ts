@@ -187,7 +187,7 @@ export async function startMockStore({ microsoft = false, clientId, onRequest }:
         res.writeHead(status, reply.statusText, { ...type, 'Content-Length': String(Buffer.byteLength(body)), ...reply.headers });
         res.end(body);
       };
-      if (reply.delayMs) setTimeout(answer, reply.delayMs);
+      if (reply.delayMs) setTimeout(answer, reply.delayMs).unref();
       else answer();
     });
   });
