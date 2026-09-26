@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { after, afterEach, before, describe, it } from 'node:test';
@@ -261,6 +261,15 @@ describe('action', () => {
     assert.match(run.stdout, /^::error::"\/dev\/null" is not a regular file\.$/m);
     assert.equal(store.requests.length, 0);
     assert.deepEqual(run.outputs, {});
+  });
+
+  it('names the system error for a zip it may not read', { skip: (process.platform === 'win32' || process.getuid?.() === 0) && 'file modes' }, async () => {
+    const zip = zipFile('1.4.0', 'locked.zip');
+    chmodSync(zip, 0o000);
+    const run = await runAction(baseInputs('1.4.0', { zip }));
+    assert.equal(run.code, 1);
+    assert.match(run.stdout, /^::error::Cannot read ".*locked\.zip": EACCES/m);
+    assert.equal(store.requests.length, 0);
   });
 
   it('keeps hostile text from Microsoft from starting workflow commands', async () => {
