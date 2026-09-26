@@ -105,7 +105,7 @@ Microsoft does not document whether two keys authenticate at the same time; the 
 
 ### Next to the Chrome action
 
-[publish-to-firefox-add-ons](https://github.com/hamzahamidi/publish-to-firefox-add-ons) covers Firefox the same way, and [Publish to Extension Stores](https://github.com/marketplace/actions/publish-to-extension-stores) runs all three stores in one step.
+[publish-to-firefox-add-ons](https://github.com/hamzahamidi/publish-to-firefox-add-ons) is the matching action for Firefox. For credential isolation, run the three store actions in separate jobs; [Publish to Extension Stores](https://github.com/marketplace/actions/publish-to-extension-stores) is the one-job alternative.
 
 A maintainer who already runs [publish-to-chrome-web-store](https://github.com/hamzahamidi/publish-to-chrome-web-store) adds one job next to it, fed by the same build artifact:
 
