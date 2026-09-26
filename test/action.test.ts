@@ -51,7 +51,7 @@ interface ActionRun {
   outputs: Record<string, string>;
 }
 
-function runAction(inputs: Record<string, string>, env: Record<string, string> = {}): Promise<ActionRun> {
+function runAction(inputs: Record<string, string>, env: Record<string, string> = {}, stopAt?: RegExp): Promise<ActionRun> {
   const output = join(dir, `output-${Math.random().toString(16).slice(2)}`);
   writeFileSync(output, '');
   const inputEnv = Object.fromEntries(Object.entries(inputs).map(([name, value]) => [`INPUT_${name.toUpperCase()}`, value]));
@@ -60,7 +60,10 @@ function runAction(inputs: Record<string, string>, env: Record<string, string> =
       env: { PATH: process.env.PATH ?? '', GITHUB_OUTPUT: output, EDGE_API_BASE: store.base, EDGE_POLL_INTERVAL_MS: '0', ...inputEnv, ...env },
     });
     let stdout = '';
-    child.stdout.on('data', (chunk) => (stdout += chunk));
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+      if (stopAt?.test(stdout)) child.kill();
+    });
     child.stderr.on('data', (chunk) => (stdout += chunk));
     child.on('close', (code) => done({ code, stdout, outputs: parseOutputs(readFileSync(output, 'utf8')) }));
   });
@@ -340,6 +343,17 @@ describe('action', () => {
     assert.match(waited.stdout, /Checking every 0\.3 s\./);
     assert.ok(Date.now() - started >= 600);
     assert.ok(store.requests[2]!.time - store.requests[1]!.time >= 250);
+  });
+
+  it('waits 10 s before the first check when no test interval is set', async () => {
+    store.on(UPLOAD, accepted(UPLOAD_OP));
+    store.on(UPLOAD_STATUS, uploadSucceeded());
+    const run = await runAction(baseInputs('1.4.0', { publish: 'false' }), { EDGE_POLL_INTERVAL_MS: '' }, /Checking every/);
+    assert.match(run.stdout, new RegExp(`^Microsoft accepted the upload as operation ${UPLOAD_OP}\\. Checking every 10 s\\.$`, 'm'));
+    assert.deepEqual(
+      store.requests.map((request) => request.key),
+      [UPLOAD],
+    );
   });
 
   it('accepts a loopback base with a trailing slash', async () => {

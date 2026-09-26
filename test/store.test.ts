@@ -171,6 +171,31 @@ describe('publishToEdge: normal runs', () => {
     assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, UPLOAD_STATUS, UPLOAD_STATUS, UPLOAD_STATUS]);
   });
 
+  it('checks every 10 s, up to 60 times, when no schedule is given', async () => {
+    uploadAnd(inProgress());
+    const run = publish({ submit: false, pollIntervalMs: undefined, pollAttempts: undefined });
+    await rejection(run);
+    assert.deepEqual(run.waits, Array(60).fill(10_000));
+    assert.deepEqual(calls(), [UPLOAD, ...Array(60).fill(UPLOAD_STATUS)]);
+    assert.ok(run.lines.includes(`Microsoft accepted the upload as operation ${UPLOAD_OP}. Checking every 10 s.`));
+  });
+
+  it('gives the upload 600 s and every other request 120 s when no timeouts are given', async () => {
+    happyPath(store);
+    const timeouts: number[] = [];
+    const original = AbortSignal.timeout;
+    AbortSignal.timeout = (ms: number) => {
+      timeouts.push(ms);
+      return original.call(AbortSignal, ms);
+    };
+    try {
+      await publish();
+    } finally {
+      AbortSignal.timeout = original;
+    }
+    assert.deepEqual(timeouts, [600_000, 120_000, 120_000, 120_000]);
+  });
+
   it('refuses a product ID that is not a GUID before any request', async () => {
     const error = await rejection(publish({ productId: '../../x' }));
     assert.match(error.message, /Product ID "\.\.\/\.\.\/x" is not a GUID\./);
@@ -294,6 +319,18 @@ describe('publishToEdge: the upload request', () => {
       assert.deepEqual(calls(), [UPLOAD]);
     });
   }
+
+  it('cuts the reason phrase to 200 characters and a text body to 2,000', async () => {
+    store.on(UPLOAD, { status: 418, statusText: 'r'.repeat(300), body: 'b'.repeat(5000) });
+    const error = await rejection(publish());
+    assert.equal(error.message, `POST ${PRODUCT_PATH}/submissions/draft/package returned HTTP 418 ${'r'.repeat(200)}: ${'b'.repeat(2000)}`);
+  });
+
+  it('cuts the message of a JSON body to 1,000 characters', async () => {
+    store.on(UPLOAD, { status: 418, statusText: 'Teapot', body: { message: 'm'.repeat(3000) } });
+    const error = await rejection(publish());
+    assert.equal(error.message, `POST ${PRODUCT_PATH}/submissions/draft/package returned HTTP 418 Teapot: ${'m'.repeat(1000)}`);
+  });
 
   it('prints a text body that is not JSON', async () => {
     store.on(UPLOAD, { status: 418, statusText: 'Teapot', body: '  <html>short and stout</html>  ' });
@@ -456,6 +493,12 @@ describe('publishToEdge: the upload operation', () => {
     assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS]);
   });
 
+  it('cuts a status answer that is not JSON to 2,000 characters', async () => {
+    uploadAnd({ body: 'x'.repeat(5000) });
+    const error = await rejection(publish());
+    assert.equal(error.message, `GET ${PRODUCT_PATH}/submissions/draft/package/operations/${UPLOAD_OP} returned a response that is not JSON: ${'x'.repeat(2000)}`);
+  });
+
   it('fails on a JSON array and on an empty status body', async () => {
     uploadAnd({ body: [] });
     assert.match((await rejection(publish())).message, /returned a response that is not JSON: \[\]$/);
@@ -490,6 +533,15 @@ describe('publishToEdge: the upload operation', () => {
     assert.match(error.message, /returned HTTP 429 Too Many Requests$/);
     assert.match(error.details!, /Microsoft may still process the upload into the draft\. Re-running the job uploads the ZIP again\.\nUpload operation: /);
     assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, UPLOAD_STATUS, UPLOAD_STATUS]);
+  });
+
+  it('counts only failures in a row, so a good answer between them resets the count', async () => {
+    const unavailable = { status: 503, statusText: 'Service Unavailable', body: null };
+    uploadAnd(unavailable, inProgress(), unavailable, inProgress(), unavailable, uploadSucceeded());
+    const run = publish({ submit: false, pollAttempts: 10 });
+    assert.equal((await run).result, 'uploaded');
+    assert.equal(run.lines.filter((line) => line.startsWith('Status check failed, trying again: ')).length, 3);
+    assert.deepEqual(calls(), [UPLOAD, ...Array(6).fill(UPLOAD_STATUS)]);
   });
 
   it('treats a status body cut off while read as transient', async () => {
