@@ -140,7 +140,7 @@ describe('re-run and crash matrix (design 6.7)', () => {
 
   const lostUploads: Array<[string, Fault['reply'], Partial<PublishOptions>]> = [
     ['a reset connection', { destroy: true }, {}],
-    ['the upload timeout', { delayMs: 300, status: 202 }, { uploadTimeoutMs: 50 }],
+    ['the upload timeout', { delayMs: 2000, status: 202 }, { uploadTimeoutMs: 500 }],
     ['HTTP 408', { status: 408, body: null }, {}],
     ['HTTP 500', { status: 500, body: null }, {}],
     ['HTTP 503', { status: 503, body: null }, {}],

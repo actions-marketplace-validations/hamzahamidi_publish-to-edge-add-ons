@@ -316,8 +316,8 @@ describe('publishToEdge: the upload request', () => {
   });
 
   it('gives up on a slow upload after the upload timeout, once', async () => {
-    store.on(UPLOAD, { ...accepted(UPLOAD_OP), delayMs: 1000 });
-    const error = await rejection(publish({ uploadTimeoutMs: 50 }));
+    store.on(UPLOAD, { ...accepted(UPLOAD_OP), delayMs: 2000 });
+    const error = await rejection(publish({ uploadTimeoutMs: 500 }));
     assert.match(error.message, /failed: .*(timeout|aborted)/i);
     assert.match(error.details!, /Microsoft may have received the upload/);
     assert.deepEqual(calls(), [UPLOAD]);
