@@ -45,7 +45,9 @@ async function main(): Promise<void> {
   const label = JSON.stringify(zipPath);
   let zip: Buffer;
   try {
-    if (statSync(zipPath).size > MAX_PACKAGE_BYTES) throw new ActionError(`${label} is larger than 2 GiB, the largest package this action reads.`);
+    const stat = statSync(zipPath);
+    if (!stat.isFile()) throw new ActionError(`${label} is not a regular file.`);
+    if (stat.size > MAX_PACKAGE_BYTES) throw new ActionError(`${label} is larger than 2 GiB, the largest package this action reads.`);
     zip = readFileSync(zipPath);
   } catch (cause) {
     if (cause instanceof ActionError) throw cause;

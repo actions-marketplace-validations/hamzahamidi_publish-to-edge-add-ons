@@ -318,7 +318,7 @@ The price: a new version held back by an older review then also ends green, and 
 | `certification-notes` | no | | Notes for the certification testers, sent as a form field named `notes`. Best effort, see [Notes](#notes-for-the-certification-testers). Needs `publish: true` |
 | `dry-run` | no | `false` | `true` checks the inputs and the ZIP, prints what would happen and sends nothing |
 
-Every input is checked before the first request. The action refuses an API key that starts with `ApiKey ` (it adds the scheme itself), credentials that look like JSON or contain spaces or control characters, an API key equal to the client ID, a product ID that is not a GUID or is the 32-letter store ID, `certification-notes` with `publish: false`, a CRX passed as `zip`, a ZIP over 2 GiB, a ZIP64 archive, and a ZIP without a valid `manifest.json` version at its root.
+Every input is checked before the first request. The action refuses an API key that starts with `ApiKey ` (it adds the scheme itself), credentials that look like JSON or contain spaces or control characters, an API key equal to the client ID, a product ID that is not a GUID or is the 32-letter store ID, `certification-notes` with `publish: false`, a `zip` path that is not a regular file (a folder, a device or a named pipe), a CRX passed as `zip`, a ZIP over 2 GiB, a ZIP64 archive, and a ZIP without a valid `manifest.json` version at its root.
 
 ## Outputs
 

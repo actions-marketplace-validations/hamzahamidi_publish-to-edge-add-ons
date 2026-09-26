@@ -12,5 +12,5 @@ First release.
 - `InProgressSubmission` fails the run with a message that names the case where nothing is wrong. `NoModulesUpdated` after a successful upload ends `skipped` with a warning. Every other documented code fails with its own hint.
 - Never repeats a POST within a run. Status checks run every 10 seconds, up to 60 times per operation, and three transient failures in a row end the run.
 - Error messages keep the HTTP reason phrase, which is the only detail of some Microsoft failures, such as `403 Client ID is Invalid` with an empty body.
-- Accepts the operation ID in `Location` only as a bare GUID and never requests it as a URL. Refuses redirects and ZIPs over 2 GiB.
+- Accepts the operation ID in `Location` only as a bare GUID and never requests it as a URL. Refuses redirects, a `zip` path that is not a regular file, and ZIPs over 2 GiB.
 - Written in TypeScript that Node 24 runs directly, with no bundle and no runtime dependencies.

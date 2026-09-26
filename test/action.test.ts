@@ -220,7 +220,7 @@ describe('action', () => {
     ['an empty zip', () => ({ zip: '' }), /^::error::Input zip is required\.$/m],
     ['an empty zip on a dry run', () => ({ zip: '', 'dry-run': 'true' }), /^::error::Input zip is required\.$/m],
     ['a missing file', () => ({ zip: 'nope/ext.zip' }), /Cannot read "nope\/ext\.zip": no such file\./],
-    ['a folder', () => ({ zip: folder() }), /Cannot read ".*folder\.zip": EISDIR/],
+    ['a folder', () => ({ zip: folder() }), /folder\.zip" is not a regular file\./],
     ['a CRX', () => ({ zip: crx('Cr24') }), /Cr24\.zip" is a CRX package, not a ZIP\. Edge Add-ons takes the ZIP\./],
     ['a differential CRX', () => ({ zip: crx('CrOD') }), /CrOD\.zip" is a CRX package, not a ZIP\. Edge Add-ons takes the ZIP\./],
     ['a ZIP with a nested manifest', () => ({ zip: nested() }), /has no manifest\.json at its root, only "dist\/manifest\.json"\. Zip the contents of the extension folder/],
@@ -248,6 +248,14 @@ describe('action', () => {
     assert.equal(run.code, 1);
     assert.match(run.stdout, /huge\.zip" is larger than 2 GiB, the largest package this action reads\./);
     assert.equal(store.requests.length, 0);
+  });
+
+  it('refuses a device as zip before reading it', { skip: process.platform === 'win32' && 'no /dev/null' }, async () => {
+    const run = await runAction(baseInputs('1.4.0', { zip: '/dev/null' }));
+    assert.equal(run.code, 1);
+    assert.match(run.stdout, /^::error::"\/dev\/null" is not a regular file\.$/m);
+    assert.equal(store.requests.length, 0);
+    assert.deepEqual(run.outputs, {});
   });
 
   it('keeps hostile text from Microsoft from starting workflow commands', async () => {
