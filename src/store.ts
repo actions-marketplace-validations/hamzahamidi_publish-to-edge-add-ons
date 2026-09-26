@@ -90,7 +90,7 @@ const PACKAGE_HINT = 'Fix the package and release again. Partner Center asks for
 const INCIDENT_HINT = 'This has happened during Microsoft service incidents. Re-run later, and if it repeats, report it to Microsoft with the operation ID.';
 
 const ambiguityHint = (version: string) =>
-  `Microsoft may have created the submission. Check the product in Partner Center: if version ${version} is In review, the release is done, and a re-run fails with InProgressSubmission until the review ends. Otherwise re-run this job.`;
+  `Microsoft may have created the submission. Check the product in Partner Center: if version ${version} is In review, the release is done, and until the review ends a re-run fails with InProgressSubmission, or ends skipped if Microsoft answers NoModulesUpdated. Otherwise re-run this job.`;
 
 const lines = (...parts: Array<string | undefined>) => parts.filter(Boolean).join('\n');
 
@@ -223,7 +223,7 @@ export async function publishToEdge({
     throw new ActionError(
       `Microsoft was still creating the submission for version ${version} after ${seconds} s.`,
       lines(
-        'It may still enter certification. Check the product in Partner Center before releasing again: a re-run while it is in progress ends with InProgressSubmission.',
+        'It may still enter certification. Check the product in Partner Center before releasing again: a re-run while it is in progress fails with InProgressSubmission, or ends skipped if Microsoft answers NoModulesUpdated.',
         operationLine,
       ),
     );
@@ -296,7 +296,7 @@ function operationError(phase: Phase, body: OperationBody, version: string, op: 
       : new ActionError(
           `Microsoft reports an unexpected failure: ${message}`,
           lines(
-            'Re-run later. A re-run ends with InProgressSubmission if a submission was created after all. If the failure repeats, contact Microsoft with the correlation ID in the message.',
+            'Re-run later. If a submission was created after all, the re-run fails with InProgressSubmission, or ends skipped if Microsoft answers NoModulesUpdated. If the failure repeats, contact Microsoft with the correlation ID in the message.',
             operationLine,
           ),
         );

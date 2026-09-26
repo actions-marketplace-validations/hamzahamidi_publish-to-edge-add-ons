@@ -7,7 +7,7 @@ Publish updates to a Microsoft Edge extension from GitHub Actions through the Ed
 
 - **Two secrets, one of which expires.** Edge accepts only an API key and a client ID, and Microsoft expires the key 72 days after it is created. [Rotating the API key](#rotating-the-api-key) replaces it before a release fails. No secretless route exists today.
 - **Reports only what Microsoft answered.** The API has no endpoint that reads the product or its review, so the action decides from the answers to its own requests and says what it could not check.
-- **Safe to re-run.** It never repeats a POST within a run and never cancels or replaces a submission in review. A re-run during a review fails with a message that says which case means nothing is wrong.
+- **Safe to re-run.** It never repeats a POST within a run and never cancels or replaces a submission in review. A re-run during a review fails with `InProgressSubmission` and a message that says which case means nothing is wrong, or ends `skipped` with a warning if Microsoft answers `NoModulesUpdated`.
 - **Auditable.** About 680 lines of TypeScript with no runtime dependencies and no build step, sending credentials to one Microsoft host.
 - **Same shape as the Chrome action.** `zip`, `publish`, `dry-run` and the outputs `result` and `version` mean what they mean in [publish-to-chrome-web-store](https://github.com/hamzahamidi/publish-to-chrome-web-store), so the two jobs sit side by side.
 
@@ -279,7 +279,7 @@ What a re-run of the same release does, with the same ZIP, after each place an e
 | The upload request lost its answer (network error, timeout, 408, 5xx, no operation ID), or processing outlasted 60 checks | Uploads again, normally ending `submitted` |
 | The upload operation failed | The same failure until the package is fixed, or `submitted` if the cause was on Microsoft's side |
 | After the upload succeeded, before the publish request, or after a `publish: false` run | Uploads again and publishes: `submitted` |
-| The publish request lost its answer, or its checks outlasted 60 checks or answered 401, 403 or 404 | Uploads again and publishes: `InProgressSubmission` if the earlier submission went through, `submitted` if it did not |
+| The publish request lost its answer, or its checks outlasted 60 checks or answered 401, 403 or 404 | Uploads again and publishes: `InProgressSubmission` (or `skipped`, if Microsoft answers `NoModulesUpdated`) if the earlier submission went through, `submitted` if it did not |
 | The publish succeeded and the version is in review | `InProgressSubmission`, or `skipped` if Microsoft answers `NoModulesUpdated` |
 | The publish succeeded and the version is live | Depends on Microsoft's version rule, which is not documented: a refused upload, `skipped`, or a new review of the same version |
 | The publish failed with `InProgressSubmission` because an older version was in review | `submitted` once that review ends |

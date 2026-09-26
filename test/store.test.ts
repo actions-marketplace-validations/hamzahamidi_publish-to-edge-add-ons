@@ -613,7 +613,7 @@ describe('publishToEdge: the publish request', () => {
       uploadAnd(uploadSucceeded());
       store.on(PUBLISH, reply, accepted(PUBLISH_OP));
       const error = await rejection(publish());
-      assert.match(error.details!, /^Microsoft may have created the submission\. Check the product in Partner Center: if version 1\.4\.0 is In review, the release is done, and a re-run fails with InProgressSubmission until the review ends\. Otherwise re-run this job\.$/);
+      assert.match(error.details!, /^Microsoft may have created the submission\. Check the product in Partner Center: if version 1\.4\.0 is In review, the release is done, and until the review ends a re-run fails with InProgressSubmission, or ends skipped if Microsoft answers NoModulesUpdated\. Otherwise re-run this job\.$/);
       assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, PUBLISH]);
     });
   }
@@ -742,7 +742,7 @@ describe('publishToEdge: the publish operation', () => {
     publishAnd(unexpectedFailure());
     const unexpected = await rejection(publish());
     assert.match(unexpected.message, new RegExp(`^Microsoft reports an unexpected failure: An error occurred while processing the request\\. Please contact support Correlation ID: ${PUBLISH_OP}`));
-    assert.match(unexpected.details!, /^Re-run later\. A re-run ends with InProgressSubmission if a submission was created after all\. If the failure repeats, contact Microsoft with the correlation ID in the message\./);
+    assert.match(unexpected.details!, /^Re-run later\. If a submission was created after all, the re-run fails with InProgressSubmission, or ends skipped if Microsoft answers NoModulesUpdated\. If the failure repeats, contact Microsoft with the correlation ID in the message\./);
   });
 
   it('reports an unknown submission status', async () => {
@@ -776,7 +776,7 @@ describe('publishToEdge: the publish operation', () => {
     publishAnd(inProgress());
     const error = await rejection(publish());
     assert.match(error.message, /^Microsoft was still creating the submission for version 1\.4\.0 after \d+ s\.$/);
-    assert.match(error.details!, /^It may still enter certification\. Check the product in Partner Center before releasing again: a re-run while it is in progress ends with InProgressSubmission\.\nPublish operation: /);
+    assert.match(error.details!, /^It may still enter certification\. Check the product in Partner Center before releasing again: a re-run while it is in progress fails with InProgressSubmission, or ends skipped if Microsoft answers NoModulesUpdated\.\nPublish operation: /);
     assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, PUBLISH, PUBLISH_STATUS, PUBLISH_STATUS, PUBLISH_STATUS]);
   });
 });
