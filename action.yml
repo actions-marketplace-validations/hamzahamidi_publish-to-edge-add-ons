@@ -1,0 +1,44 @@
+name: Publish to Edge Add-ons
+description: Publish updates to a Microsoft Edge extension through the Edge Add-ons API. Uploads the ZIP to the draft, submits it for certification, and has no runtime dependencies.
+author: Hamza Hamidi
+
+branding:
+  icon: upload-cloud
+  color: blue
+
+inputs:
+  api-key:
+    description: API key from Partner Center, Microsoft Edge, Publish API. Keys expire after 72 days; the README shows how to rotate one. Pass it from a secret.
+    required: true
+  client-id:
+    description: Client ID from the same Publish API page, not an OAuth client ID. Pass it from a secret, so the runner redacts it where it lists step inputs.
+    required: true
+  product-id:
+    description: Product ID, the GUID on the Extension overview page in Partner Center. Not the extension ID in the store address.
+    required: true
+  zip:
+    description: Path to the extension ZIP, with manifest.json at its root.
+    required: true
+  publish:
+    description: Submit the draft for certification after the upload. Set to false to upload into the draft only and publish from Partner Center.
+    required: false
+    default: 'true'
+  certification-notes:
+    description: Notes for the certification testers, sent with the submission as a form field named notes. Best effort, because Microsoft's documentation disagrees on the format; see the README. Needs publish true.
+    required: false
+  dry-run:
+    description: Check the inputs and the ZIP, then report what a real run would do. Sends no request to Microsoft, so it does not check the credentials, the product ID or a review in progress.
+    required: false
+    default: 'false'
+
+outputs:
+  result:
+    description: submitted (in certification; Microsoft publishes it once approved), uploaded (publish was false), skipped (Microsoft reported no change since the last submission) or dry-run. Empty when the run fails.
+  version:
+    description: Version read from manifest.json in the ZIP.
+  error-code:
+    description: errorCode of a failed Microsoft operation, such as InProgressSubmission or NoModulesUpdated. Set also when the step fails. Empty otherwise.
+
+runs:
+  using: node24
+  main: src/main.ts
