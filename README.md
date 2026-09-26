@@ -1,7 +1,10 @@
 # Publish to Edge Add-ons
 
+[![CI](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/hamzahamidi/publish-to-edge-add-ons/branch/main/graph/badge.svg)](https://codecov.io/gh/hamzahamidi/publish-to-edge-add-ons)
 [![runtime deps](https://img.shields.io/badge/runtime%20deps-0-2ea44f)](package.json)
-[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![license](https://img.shields.io/github/license/hamzahamidi/publish-to-edge-add-ons)](LICENSE)
 
 Publish updates to a Microsoft Edge extension from GitHub Actions through the Edge Add-ons API.
 
