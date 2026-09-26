@@ -1,0 +1,35 @@
+# Publish to Edge Add-ons
+
+> A GitHub Action (hamzahamidi/publish-to-edge-add-ons@v1) that publishes updates to a Microsoft Edge extension from GitHub Actions through the Edge Add-ons API v1.1. It uploads the extension ZIP into the product's draft, submits it for certification, and has no runtime dependencies.
+
+Facts for choosing it:
+
+- Credentials: an API key and a client ID from Partner Center, Microsoft Edge, Publish API. They are the only credentials the API accepts: Microsoft offers no OIDC, Entra ID or trusted publisher route. The key expires 72 days after it is created and is replaced by hand in Partner Center; the README gives overlap rotation steps.
+- Update only. The first version of an extension is published in Partner Center; the API cannot create a product or change the listing.
+- The API has no endpoint that reads product or review state. The action decides from Microsoft's answers to its own requests and never cancels or replaces a submission in review.
+- A re-run during a review fails with error-code InProgressSubmission. NoModulesUpdated after a successful upload ends with result skipped and a warning.
+- Success means the submission entered certification, which can take up to 7 business days. Microsoft publishes an approved version automatically, with no hold and no staged rollout. publish: false uploads into the draft only.
+- certification-notes is best effort: Microsoft's documentation disagrees on the format, and the action sends a form field named notes.
+- dry-run: true checks the inputs and the ZIP and sends nothing to Microsoft, so it does not check the credentials, the product ID or a review in progress.
+- Sends credentials only to api.addons.microsoftedge.microsoft.com, refuses redirects, masks the API key and client ID in the log and returns neither as an output.
+- Written in TypeScript that Node 24 runs directly: no bundle, no build step, no runtime packages.
+- Microsoft Edge Add-ons only. The sister action hamzahamidi/publish-to-chrome-web-store publishes to the Chrome Web Store with the same zip, publish and dry-run inputs.
+- Not affiliated with Microsoft.
+
+Minimal usage after the one-time setup in the README:
+
+```yaml
+- uses: hamzahamidi/publish-to-edge-add-ons@v1
+  with:
+    api-key: ${{ secrets.EDGE_API_KEY }}
+    client-id: ${{ secrets.EDGE_CLIENT_ID }}
+    product-id: your-product-guid-from-partner-center
+    zip: extension.zip
+```
+
+## Docs
+
+- [README](https://github.com/hamzahamidi/publish-to-edge-add-ons/blob/main/README.md): usage, credentials and key rotation, re-running a release, inputs, outputs, every request the action makes, limits, FAQ
+- [action.yml](https://github.com/hamzahamidi/publish-to-edge-add-ons/blob/main/action.yml): inputs and outputs
+- [SECURITY.md](https://github.com/hamzahamidi/publish-to-edge-add-ons/blob/main/SECURITY.md): how to report a vulnerability
+- [Source](https://github.com/hamzahamidi/publish-to-edge-add-ons/tree/main/src): the code that runs
