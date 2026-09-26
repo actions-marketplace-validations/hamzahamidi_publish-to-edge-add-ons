@@ -138,6 +138,8 @@ export async function publishToEdge({
     try {
       return { status: response.status, line, text: await response.text(), location: response.headers.get('location') };
     } catch (error) {
+      const refused = (response.status < 200 || response.status >= 300) && !TRANSIENT_STATUSES.has(response.status);
+      if (refused) return { status: response.status, line, text: '', location: response.headers.get('location') };
       throw new ActionError(`${line}, then failed while reading the response: ${networkReason(error)}`, undefined, { retryable: true });
     }
   }

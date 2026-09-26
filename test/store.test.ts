@@ -331,6 +331,15 @@ describe('publishToEdge: the upload request', () => {
     assert.deepEqual(calls(), [UPLOAD]);
   });
 
+  it('keeps the status hint of a refused upload whose body is cut off', async () => {
+    store.on(UPLOAD, { status: 401, statusText: 'Unauthorized', partial: true });
+    const error = await rejection(publish());
+    assert.equal(error.message, `POST ${PRODUCT_PATH}/submissions/draft/package returned HTTP 401 Unauthorized`);
+    assert.match(error.details!, /^Microsoft refused the API key/);
+    assert.ok(!error.details!.includes('may have received'));
+    assert.deepEqual(calls(), [UPLOAD]);
+  });
+
   it('refuses a redirect and never requests its Location', async () => {
     store.on(UPLOAD, { status: 307, headers: { Location: `${store.base}/elsewhere` } });
     const error = await rejection(publish());
@@ -490,6 +499,16 @@ describe('publishToEdge: the upload operation', () => {
     assert.match(run.lines.join('\n'), /Status check failed, trying again: .*then failed while reading the response/);
   });
 
+  it('stops at once on a 401 status answer whose body is cut off', async () => {
+    uploadAnd({ status: 401, statusText: 'Unauthorized', partial: true }, uploadSucceeded());
+    const run = publish({ submit: false });
+    const error = await rejection(run);
+    assert.equal(error.message, `GET ${PRODUCT_PATH}/submissions/draft/package/operations/${UPLOAD_OP} returned HTTP 401 Unauthorized`);
+    assert.match(error.details!, /^Microsoft refused the API key/);
+    assert.ok(!run.lines.some((line) => line.startsWith('Status check failed')));
+    assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS]);
+  });
+
   it('gives up on a slow status check after the request timeout and counts it as transient', async () => {
     uploadAnd({ ...uploadSucceeded(), delayMs: 2000 }, uploadSucceeded());
     const run = publish({ submit: false, requestTimeoutMs: 500 });
@@ -598,6 +617,16 @@ describe('publishToEdge: the publish request', () => {
       assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, PUBLISH]);
     });
   }
+
+  it('gives the client ID hint, not the ambiguity hint, to a 403 on the publish call whose body is cut off', async () => {
+    uploadAnd(uploadSucceeded());
+    store.on(PUBLISH, { status: 403, statusText: 'Client ID is Invalid', partial: true });
+    const error = await rejection(publish());
+    assert.equal(error.message, `POST ${PRODUCT_PATH}/submissions returned HTTP 403 Client ID is Invalid`);
+    assert.match(error.details!, /^Microsoft refused the client ID/);
+    assert.ok(!error.details!.includes('may have created'));
+    assert.deepEqual(calls(), [UPLOAD, UPLOAD_STATUS, PUBLISH]);
+  });
 
   it('gives up on a slow publish call after the request timeout, once', async () => {
     uploadAnd(uploadSucceeded());
