@@ -9,7 +9,7 @@ Publish updates to a Microsoft Edge extension from GitHub Actions through the Ed
 - **Reports only what Microsoft answered.** The API has no endpoint that reads the product or its review, so the action decides from the answers to its own requests and says what it could not check.
 - **Safe to re-run.** It never repeats a POST within a run and never cancels or replaces a submission in review. A re-run during a review fails with `InProgressSubmission` and a message that says which case means nothing is wrong, or ends `skipped` with a warning if Microsoft answers `NoModulesUpdated`.
 - **Auditable.** About 680 lines of TypeScript with no runtime dependencies and no build step, sending credentials to one Microsoft host.
-- **Same shape as the Chrome action.** `zip`, `publish`, `dry-run` and the outputs `result` and `version` mean what they mean in [publish-to-chrome-web-store](https://github.com/hamzahamidi/publish-to-chrome-web-store), so the two jobs sit side by side.
+- **Same shape as the Chrome action.** The inputs `zip`, `publish` and `dry-run` and the outputs `result` and `version` have the same names as in [publish-to-chrome-web-store](https://github.com/hamzahamidi/publish-to-chrome-web-store), so the two jobs sit side by side. A dry run here checks less, as [the table](#next-to-the-chrome-action) shows.
 
 ## Quick start
 
@@ -85,13 +85,13 @@ gh secret set EDGE_CLIENT_ID --env edge-add-ons --repo OWNER/REPO
 
 ### Rotating the API key
 
-API keys expire 72 days after they are created, according to the Microsoft Edge blog post of 30 September 2024 that announced API keys. No API creates or refreshes a key, so after 72 days without rotation every run fails at its first request with HTTP 401. The blog promises reminder emails before expiry, but a developer reports receiving none ([microsoft/MicrosoftEdge-Extensions#272](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/272)), so set your own reminder instead of waiting for one.
+API keys expire 72 days after they are created, according to the [Microsoft Edge blog post of 30 September 2024](https://blogs.windows.com/msedgedev/2024/09/30/enhanced-security-for-extensions-with-new-publish-api/) that announced API keys. No API creates or refreshes a key, so after 72 days without rotation every run fails at its first request. Microsoft's reference lists HTTP 401 for an expired token, but this has not been tried with a real expired key, and a 403 is possible. The blog promises reminder emails before expiry, but a developer reports receiving none ([microsoft/MicrosoftEdge-Extensions#272](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/272)), so set your own reminder instead of waiting for one.
 
 The Publish API page lists several keys at once, each with its own expiry date, so the new key can be created before the old one expires:
 
 1. In Partner Center, open Microsoft Edge, Publish API, and create a new API key. Note its expiry date.
 2. Replace the secret: run `gh secret set EDGE_API_KEY --env edge-add-ons --repo OWNER/REPO` and paste the new key.
-3. Keep the old key until a run has used the new one: the next release, or a run with `publish: false`, which uploads the ZIP into the draft and submits nothing. A dry run sends no request, so it cannot check a key, and the API has no request that checks one without writing to the draft. If that run fails with 401, the old key is still listed and can go back into the secret while you look into it.
+3. Keep the old key until a run has used the new one: the next release, or a run with `publish: false`, which uploads the ZIP into the draft and submits nothing. A dry run sends no request, so it cannot check a key. Whether a read-only request can check one is not verified, so the only proven check is a run that uploads. If that run fails with 401 or 403, the old key is still listed and can go back into the secret while you look into it.
 4. Delete the old key on the Publish API page.
 5. Set a reminder for about 60 days after the new key's creation date.
 
@@ -246,7 +246,7 @@ To start a dry run by hand, give the workflow a `workflow_dispatch` trigger, set
 
 ### Moving from wdzeng/edge-addon
 
-[wdzeng/edge-addon](https://github.com/wdzeng/edge-addon) takes the same set of inputs under other names:
+[wdzeng/edge-addon](https://github.com/wdzeng/edge-addon) takes the same set of inputs; three of them have other names here:
 
 | wdzeng/edge-addon | This action |
 | --- | --- |
@@ -302,7 +302,7 @@ If you prefer that case green, use the `error-code` output, which is set even wh
         run: exit 1
 ```
 
-The price: a new version held back by an older review then also ends green, and it waits in the draft until someone publishes it.
+The price: a new version held back by an older review then also ends green, and it waits in the draft until someone publishes it. If Microsoft refuses the upload itself during a review, the new version is not even in the draft, and the job still ends green.
 
 **`NoModulesUpdated` ends `skipped` with a warning.** The action always uploads before it publishes, so this answer arrives only after this run's upload succeeded. Microsoft then says nothing changed since the last submission, which means that submission already holds this package. It cannot say whether that submission passed certification, so the warning points to Partner Center. This reading assumes Microsoft compares content: if it compares only the version, a rebuild with changes under the same version is reported `skipped` too, which is one more reason to raise the version for every release.
 
@@ -459,7 +459,7 @@ Yes, two: the API key and the client ID. Microsoft offers no other way to call t
 
 ### Why does my release fail after two months?
 
-The API key expired: keys last 72 days. Create a new one and replace the secret, as in [Rotating the API key](#rotating-the-api-key).
+Most likely the API key expired: keys last 72 days. A 401 or 403 close to the key's expiry date points to the key. Create a new one and replace the secret, as in [Rotating the API key](#rotating-the-api-key).
 
 ### Why did a re-run fail with `InProgressSubmission`?
 
