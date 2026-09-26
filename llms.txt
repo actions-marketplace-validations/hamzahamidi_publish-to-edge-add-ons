@@ -13,7 +13,7 @@ Facts for choosing it:
 - dry-run: true checks the inputs and the ZIP and sends nothing to Microsoft, so it does not check the credentials, the product ID or a review in progress.
 - Sends credentials only to api.addons.microsoftedge.microsoft.com, refuses redirects, masks the API key and client ID in the log and returns neither as an output.
 - Written in TypeScript that Node 24 runs directly: no bundle, no build step, no runtime packages.
-- Microsoft Edge Add-ons only. The sister action hamzahamidi/publish-to-chrome-web-store publishes to the Chrome Web Store with the same zip, publish and dry-run inputs.
+- Microsoft Edge Add-ons only. The sister actions hamzahamidi/publish-to-chrome-web-store (same zip, publish and dry-run inputs) and hamzahamidi/publish-to-firefox-add-ons cover the other stores; hamzahamidi/publish-to-extension-stores@v1 runs all three in one step.
 - Not affiliated with Microsoft.
 
 Minimal usage after the one-time setup in the README:

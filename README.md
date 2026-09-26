@@ -105,6 +105,8 @@ Microsoft does not document whether two keys authenticate at the same time; the 
 
 ### Next to the Chrome action
 
+[publish-to-firefox-add-ons](https://github.com/hamzahamidi/publish-to-firefox-add-ons) covers Firefox the same way, and [Publish to Extension Stores](https://github.com/marketplace/actions/publish-to-extension-stores) runs all three stores in one step.
+
 A maintainer who already runs [publish-to-chrome-web-store](https://github.com/hamzahamidi/publish-to-chrome-web-store) adds one job next to it, fed by the same build artifact:
 
 ```yaml
