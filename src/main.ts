@@ -81,7 +81,7 @@ function checkCredential(name: string, noun: string, value: string, advice: stri
   if (JSON_LIKE.test(value)) {
     throw new ActionError(`Input ${name} looks like JSON. Store the ${noun} alone as its own secret: GitHub cannot reliably redact values taken out of a structured secret.`);
   }
-  if (!HEADER_SAFE.test(value)) throw new ActionError(`Input ${name} contains spaces or control characters. ${advice}`);
+  if (!HEADER_SAFE.test(value)) throw new ActionError(`Input ${name} contains a space, a control character or a character outside printable ASCII. ${advice}`);
 }
 
 function testEndpoint(name: string, fallback: string): string {
