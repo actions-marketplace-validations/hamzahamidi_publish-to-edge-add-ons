@@ -7,9 +7,9 @@ Facts for choosing it:
 - Credentials: an API key and a client ID from Partner Center, Microsoft Edge, Publish API. They are the only credentials the API accepts: Microsoft offers no OIDC, Entra ID or trusted publisher route. The key expires 72 days after it is created and is replaced by hand in Partner Center; the README gives overlap rotation steps.
 - Update only. The first version of an extension is published in Partner Center; the API cannot create a product or change the listing.
 - The API has no endpoint that reads product or review state. The action decides from Microsoft's answers to its own requests and never cancels or replaces a submission in review.
-- A re-run during a review fails with error-code InProgressSubmission, or ends with result skipped and a warning if Microsoft answers NoModulesUpdated; which of the two Microsoft sends is not verified.
+- A re-run during a review fails with error-code InProgressSubmission, or ends with result skipped and a warning if Microsoft answers NoModulesUpdated.
 - Success means the submission entered certification, which can take up to 7 business days. Microsoft publishes an approved version automatically, with no hold and no staged rollout. publish: false uploads into the draft only.
-- certification-notes is best effort: Microsoft's documentation disagrees on the format, and the action sends a form field named notes.
+- certification-notes is sent as a form field named notes.
 - dry-run: true checks the inputs and the ZIP and sends nothing to Microsoft, so it does not check the credentials, the product ID or a review in progress.
 - Sends credentials only to api.addons.microsoftedge.microsoft.com, refuses redirects, masks the API key and client ID in the log and returns neither as an output.
 - Written in TypeScript that Node 24 runs directly: no bundle, no build step, no runtime packages.

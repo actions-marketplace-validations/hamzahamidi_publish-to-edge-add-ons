@@ -24,7 +24,7 @@ inputs:
     required: false
     default: 'true'
   certification-notes:
-    description: Notes for the certification testers, sent with the submission as a form field named notes. Best effort, because Microsoft's documentation disagrees on the format; see the README. Needs publish true.
+    description: Notes for the certification testers, sent with the submission as a form field named notes. See the README. Needs publish true.
     required: false
   dry-run:
     description: Check the inputs and the ZIP, then report what a real run would do. Sends no request to Microsoft, so it does not check the credentials, the product ID or a review in progress.

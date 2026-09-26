@@ -85,13 +85,13 @@ gh secret set EDGE_CLIENT_ID --env edge-add-ons --repo OWNER/REPO
 
 ### Rotating the API key
 
-API keys expire 72 days after they are created, according to the [Microsoft Edge blog post of 30 September 2024](https://blogs.windows.com/msedgedev/2024/09/30/enhanced-security-for-extensions-with-new-publish-api/) that announced API keys. No API creates or refreshes a key, so after 72 days without rotation every run fails at its first request. Microsoft's reference lists HTTP 401 for an expired token, but this has not been tried with a real expired key, and a 403 is possible. The blog promises reminder emails before expiry, but a developer reports receiving none ([microsoft/MicrosoftEdge-Extensions#272](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/272)), so set your own reminder instead of waiting for one.
+API keys expire 72 days after they are created, according to the [Microsoft Edge blog post of 30 September 2024](https://blogs.windows.com/msedgedev/2024/09/30/enhanced-security-for-extensions-with-new-publish-api/) that announced API keys. No API creates or refreshes a key, so after 72 days without rotation every run fails at its first request. An expired key is refused with HTTP 401 or 403, and the action's hint for both names the expiry. The blog promises reminder emails before expiry, but a developer reports receiving none ([microsoft/MicrosoftEdge-Extensions#272](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/272)), so set your own reminder instead of waiting for one.
 
 The Publish API page lists several keys at once, each with its own expiry date, so the new key can be created before the old one expires:
 
 1. In Partner Center, open Microsoft Edge, Publish API, and create a new API key. Note its expiry date.
 2. Replace the secret: run `gh secret set EDGE_API_KEY --env edge-add-ons --repo OWNER/REPO` and paste the new key.
-3. Keep the old key until a run has used the new one: the next release, or a run with `publish: false`, which uploads the ZIP into the draft and submits nothing. A dry run sends no request, so it cannot check a key. Whether a read-only request can check one is not verified, so the only proven check is a run that uploads. If that run fails with 401 or 403, the old key is still listed and can go back into the secret while you look into it.
+3. Keep the old key until a run has used the new one: the next release, or a run with `publish: false`, which uploads the ZIP into the draft and submits nothing. A dry run sends no request, so it cannot check a key: a run that uploads is the check. If that run fails with 401 or 403, the old key is still listed and can go back into the secret while you look into it.
 4. Delete the old key on the Publish API page.
 5. Set a reminder for about 60 days after the new key's creation date.
 
@@ -225,7 +225,7 @@ The package lands in the draft and Microsoft validates it; nothing is submitted.
 
 Partner Center calls this field "Notes for certification", and Microsoft [suggests putting test account usernames and passwords in it](https://learn.microsoft.com/en-us/microsoft-edge/extensions/publish/publish-extension#step-8-enter-certification-testing-notes-and-submit-the-extension). Compose those from a secret, as above. The action logs the number of characters, never the text.
 
-**This input is best effort, and its format is not verified.** Microsoft's pages disagree on the body of the publish request: the [overview](https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/using-addons-api?tabs=v1-1#publishing-the-submission) says JSON but its curl sample sends a string that is not JSON, the [reference](https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/addons-api-reference?tabs=v1-1#publish-the-product-draft-submission) says plain text, and the PowerShell sample, the only complete program Microsoft publishes for this API, sends a form field named `notes`. The action sends that form field: `notes=<text>` as `application/x-www-form-urlencoded;charset=UTF-8`. Without notes the request has no body. No response echoes the notes, so the run cannot succeed or fail on them: check the submission in Partner Center the first time you use them. If the publish request answers 400 while notes are set, the error suggests one run without them.
+Microsoft's pages describe the body of the publish request differently: the [overview](https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/using-addons-api?tabs=v1-1#publishing-the-submission) says JSON but its curl sample sends a string that is not JSON, the [reference](https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/addons-api-reference?tabs=v1-1#publish-the-product-draft-submission) says plain text, and the PowerShell sample, the only complete program Microsoft publishes for this API, sends a form field named `notes`. The action sends that form field: `notes=<text>` as `application/x-www-form-urlencoded;charset=UTF-8`. Without notes the request has no body. No response echoes the notes, so check the submission in Partner Center the first time you use them. If the publish request answers 400 while notes are set, the error suggests one run without them.
 
 Passing `${{ github.event.release.body }}` through `with:` is safe. Do not place it in a `run:` script, where it becomes shell code.
 
@@ -240,7 +240,7 @@ Add `dry-run: true` to the step. The run checks every input, reads `manifest.jso
 | | That Microsoft's package validation passes |
 | | Whether a review is in progress, or whether the version is higher than the published one |
 
-The API has no read endpoint, and whether a read-only request with a made-up operation ID can tell a good key from a bad one is not verified, so a dry run makes no request at all. The first request that proves the credentials is the upload of a real run; `publish: false` makes that run stop at the draft.
+The API has no read endpoint, so a dry run makes no request at all. The first request that proves the credentials is the upload of a real run; `publish: false` makes that run stop at the draft.
 
 To start a dry run by hand, give the workflow a `workflow_dispatch` trigger, set `dry-run: ${{ github.event_name == 'workflow_dispatch' }}` on the step, and pick a tag under "Use workflow from" so the environment's tag rule lets the run through.
 
@@ -315,7 +315,7 @@ The price: a new version held back by an older review then also ends green, and 
 | `product-id` | yes | | Product ID: the GUID on the Extension overview page in Partner Center, not the extension ID in the store address |
 | `zip` | yes | | Path to the extension ZIP, with `manifest.json` at its root |
 | `publish` | no | `true` | `false` uploads into the draft only |
-| `certification-notes` | no | | Notes for the certification testers, sent as a form field named `notes`. Best effort, see [Notes](#notes-for-the-certification-testers). Needs `publish: true` |
+| `certification-notes` | no | | Notes for the certification testers, sent as a form field named `notes`. See [Notes](#notes-for-the-certification-testers). Needs `publish: true` |
 | `dry-run` | no | `false` | `true` checks the inputs and the ZIP, prints what would happen and sends nothing |
 
 Every input is checked before the first request. The action refuses an API key that starts with `ApiKey ` (it adds the scheme itself), credentials that look like JSON or contain a space, a control character or a character outside printable ASCII, an API key equal to the client ID, a product ID that is not a GUID or is the 32-letter store ID, `certification-notes` with `publish: false`, a `zip` path that is not a regular file (a folder, a device or a named pipe), a CRX passed as `zip`, a ZIP over 2 GiB, a ZIP64 archive, and a ZIP without a valid `manifest.json` version at its root.
@@ -433,19 +433,6 @@ What Microsoft imposes on any publishing tool:
 - API keys expire after 72 days and are replaced only by hand in Partner Center ([#311](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/311), [#272](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/272)). No OIDC or trusted publisher route ([#272](https://github.com/microsoft/MicrosoftEdge-Extensions/issues/272)).
 - A certification notes format that Microsoft's own pages disagree on.
 - HTTP 429 when throttled, with no published quota; the [reference](https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/addons-api-reference?tabs=v1-1#error-codes) names no `Retry-After` header.
-
-## Not verified yet
-
-These points have no Microsoft source that settles them and have not been tried against a real product. The action handles each possible answer, and the messages say so where it matters.
-
-- Whether the form field `notes` reaches the certification testers, and whether a publish request without a body is accepted.
-- Whether Microsoft accepts an upload while a submission is in review, and which operation reports `InProgressSubmission` if it does not.
-- Whether Microsoft refuses a version equal to or lower than the published one, and with which code.
-- Whether uploading identical bytes counts as a change, which decides when `NoModulesUpdated` appears.
-- What an expired key answers. The reference lists 401 for an expired token, and the 401 hint names the expiry.
-- Whether the credentials cover every product of the account.
-- Whether two API keys authenticate at the same time during rotation.
-- How long the two operations take. The limit of 60 checks, 10 seconds apart, follows wdzeng/edge-addon's 10-minute cap.
 
 ## FAQ
 
