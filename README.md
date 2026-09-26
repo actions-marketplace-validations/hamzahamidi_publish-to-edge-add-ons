@@ -3,6 +3,7 @@
 [![CI](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/hamzahamidi/publish-to-edge-add-ons/branch/main/graph/badge.svg)](https://codecov.io/gh/hamzahamidi/publish-to-edge-add-ons)
+[![GitHub Marketplace](https://img.shields.io/github/v/release/hamzahamidi/publish-to-edge-add-ons?label=Marketplace&logo=github)](https://github.com/marketplace/actions/publish-to-edge-add-ons)
 [![runtime deps](https://img.shields.io/badge/runtime%20deps-0-2ea44f)](package.json)
 [![license](https://img.shields.io/github/license/hamzahamidi/publish-to-edge-add-ons)](LICENSE)
 
