@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/hamzahamidi/publish-to-edge-add-ons/actions/workflows/codeql.yml)
-[![codecov](https://codecov.io/gh/hamzahamidi/publish-to-edge-add-ons/branch/main/graph/badge.svg)](https://codecov.io/gh/hamzahamidi/publish-to-edge-add-ons)
 [![GitHub Marketplace](https://img.shields.io/github/v/release/hamzahamidi/publish-to-edge-add-ons?label=Marketplace&logo=github)](https://github.com/marketplace/actions/publish-to-edge-add-ons)
 [![runtime deps](https://img.shields.io/badge/runtime%20deps-0-2ea44f)](package.json)
 [![license](https://img.shields.io/github/license/hamzahamidi/publish-to-edge-add-ons)](LICENSE)
@@ -408,7 +407,7 @@ The host is fixed in the code. There is no input to change it, redirects are ref
 
 ### How it is checked
 
-- Every pull request type-checks the code and runs the tests on Linux, Windows and macOS with a coverage floor of 95% of lines. The tests run the action's entry point against a mock of the Edge Add-ons API that answers the way Microsoft was seen answering, such as `403 Client ID is Invalid` with an empty body, and a separate job runs the action from `action.yml` in four scenarios: submitted, upload only, a review in progress, and a dry run. See [ci.yml](.github/workflows/ci.yml). The Linux run reports coverage to Codecov with a short-lived OIDC token.
+- Every pull request type-checks the code and runs the tests on Linux, Windows and macOS with a coverage floor of 95% of lines. The tests run the action's entry point against a mock of the Edge Add-ons API that answers the way Microsoft was seen answering, such as `403 Client ID is Invalid` with an empty body, and a separate job runs the action from `action.yml` in four scenarios: submitted, upload only, a review in progress, and a dry run. See [ci.yml](.github/workflows/ci.yml).
 - [OpenSSF Scorecard](.github/workflows/scorecard.yml) checks the repository's security practices on every push to `main` and weekly, and publishes the result.
 - [CodeQL](.github/workflows/codeql.yml) scans the JavaScript and the workflows on every pull request, every push to `main` and weekly. Dependabot keeps the workflow actions current.
 - Releases are immutable: once `v1.0.0` is published, its tag and contents cannot change. `v1` points at the newest `1.x` release. [The workflow that moves it](.github/workflows/major-tag.yml) always points `v1` at the highest `1.x.y` release, refuses one that is not immutable, and runs one release at a time. If your organization requires full commit SHAs, pin the commit of a release.
